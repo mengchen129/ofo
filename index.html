@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>ofo 密码查询</title>
+    <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            -webkit-font-smoothing: antialiased;
+            font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+<h3 class="text-center">ofo 密码查询</h3>
+<h6 class="text-muted text-center">已收纳 <span id="total-count">0</span> 条记录</h6>
+<hr>
+
+<div class="col-xs-10 col-xs-offset-1">
+    <form onsubmit="return search();">
+        <div class="row">
+            <div class="col-xs-7">
+                <input type="tel" class="form-control input-lg" placeholder="输入车牌号" id="number_input" maxlength="7" required>
+            </div>
+            <div class="col-xs-5">
+                <button type="submit" class="btn btn-success btn-lg btn-block">查询</button>
+            </div>
+        </div>
+        <p id="password-result" class="text-success text-center" style="font-size: 30px; padding: 10px;"></p>
+    </form>
+    <div id="add-password" style="display: none;">
+        <form action="/add" method="post">
+            <p>
+                <input type="tel" class="form-control input-lg" name="password" placeholder="输入密码" required>
+                <input type="hidden" id="number_copy" name="number" value="">
+            </p>
+
+            <p class="text-center">
+                <button type="submit" class="btn btn-success btn-lg">添加密码</button>
+            </p>
+        </form>
+    </div>
+</div>
+
+<script>
+    var passwordResult = null;
+
+    window.addEventListener('DOMContentLoaded', function() {
+        passwordResult = document.querySelector('#password-result');
+        document.querySelector('#number_input').addEventListener('input', function(e) {
+            document.querySelector('#number_copy').value = e.target.value;
+        }, false);
+
+        queryTotalCount();
+    }, false);
+
+    function searchPassword(number) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET','/search?number=' + number, true);
+        xhr.onload = function() {
+            var body = xhr.responseText;
+            var data = JSON.parse(body);
+            if (data.password) {
+                passwordResult.classList.remove('text-danger');
+                passwordResult.classList.add('text-success');
+                passwordResult.innerHTML = data.password;
+            } else {
+                passwordResult.classList.remove('text-success');
+                passwordResult.classList.add('text-danger');
+                passwordResult.innerHTML = '没有查到';
+                document.querySelector('#add-password').style.display = 'block';
+            }
+        };
+        xhr.send(null);
+    }
+
+    function queryTotalCount() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET','/total', true);
+        xhr.onload = function() {
+            var body = xhr.responseText;
+            var data = JSON.parse(body);
+            document.querySelector('#total-count').innerHTML = data.count;
+        };
+        xhr.send(null);
+    }
+
+    function search() {
+        searchPassword(document.querySelector('#number_input').value);
+        return false;
+    }
+</script>
+</body>
+</html>
